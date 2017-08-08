@@ -24,6 +24,7 @@ contract('Foundation', function(accounts) {
 
         return Foundation.new().then(function(instance) {
             foundation = instance;
+
             return foundation.collect({from: account_one, value: 1});
         }).then(function() {
             return foundation.approveFoundation(1000, {from: account_one});
@@ -44,8 +45,11 @@ contract('Foundation', function(accounts) {
         var account_one = accounts[0];
         var account_two = accounts[1];
 
-       return Foundation.new().then(function(instance) {
+        var watcher;
+
+        return Foundation.new().then(function(instance) {
             foundation = instance;
+            watcher = foundation.Withdraw();
             return foundation.collect({from: account_one, value: 100});
         }).then(function() {
             return foundation.approveFoundation(10000, {from: account_one});
@@ -54,6 +58,12 @@ contract('Foundation', function(accounts) {
         }).then(function() {
             return foundation.withdraw({from: account_two});
         }).then(function() {
+            return watcher.get();
+        }).then(function(events) {
+            assert.equal(events.length, 1);
+            // test events
+            assert.equal(events[0].args.who, account_two);
+            assert.equal(events[0].args.amount, 9);
             return foundation.getFoundationBalance.call(account_two);
         }).then(function(balance) {
             assert.equal(balance.toNumber(), 91, "");
